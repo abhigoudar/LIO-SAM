@@ -2,9 +2,11 @@ cmake_minimum_required(VERSION 3.5)
 project(lio_sam)
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  set(CMAKE_BUILD_TYPE Release)
+ set(CMAKE_BUILD_TYPE Release)
 endif()
 
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_CXX_STANDARD 17)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
@@ -34,26 +36,48 @@ include_directories(
   include/lio_sam
 )
 
-rosidl_generate_interfaces(${PROJECT_NAME} "msg/CloudInfo.msg" "srv/SaveMap.srv" DEPENDENCIES std_msgs sensor_msgs)
+set(DEPENDENCIES
+  rclcpp
+  rclpy
+  std_msgs
+  sensor_msgs
+  geometry_msgs
+  nav_msgs
+  pcl_msgs
+  visualization_msgs
+  tf2
+  tf2_ros
+  tf2_eigen
+  tf2_sensor_msgs
+  tf2_geometry_msgs
+  OpenCV
+  PCL
+  GTSAM
+)
 
-
+rosidl_generate_interfaces(${PROJECT_NAME} 
+  "msg/CloudInfo.msg"
+  "srv/SaveMap.srv"
+  DEPENDENCIES
+  std_msgs
+  sensor_msgs)
 
 add_executable(${PROJECT_NAME}_featureExtraction src/featureExtraction.cpp)
-ament_target_dependencies(${PROJECT_NAME}_featureExtraction rclcpp rclpy std_msgs sensor_msgs geometry_msgs nav_msgs pcl_msgs visualization_msgs tf2 tf2_ros tf2_eigen tf2_sensor_msgs tf2_geometry_msgs OpenCV PCL)
+ament_target_dependencies(${PROJECT_NAME}_featureExtraction ${DEPENDENCIES})
 rosidl_target_interfaces(${PROJECT_NAME}_featureExtraction ${PROJECT_NAME} "rosidl_typesupport_cpp")
 target_link_libraries(${PROJECT_NAME}_featureExtraction "${cpp_typesupport_target}") 
 
 add_executable(${PROJECT_NAME}_imageProjection src/imageProjection.cpp)
-ament_target_dependencies(${PROJECT_NAME}_imageProjection rclcpp rclpy std_msgs sensor_msgs geometry_msgs nav_msgs pcl_msgs visualization_msgs pcl_msgs tf2 tf2_ros tf2_eigen tf2_sensor_msgs tf2_geometry_msgs OpenCV PCL)
+ament_target_dependencies(${PROJECT_NAME}_imageProjection ${DEPENDENCIES})
 rosidl_target_interfaces(${PROJECT_NAME}_imageProjection ${PROJECT_NAME} "rosidl_typesupport_cpp")
 target_link_libraries(${PROJECT_NAME}_imageProjection "${cpp_typesupport_target}") 
 
 add_executable(${PROJECT_NAME}_imuPreintegration src/imuPreintegration.cpp)
-ament_target_dependencies(${PROJECT_NAME}_imuPreintegration rclcpp rclpy std_msgs sensor_msgs geometry_msgs nav_msgs pcl_msgs visualization_msgs tf2 tf2_ros tf2_eigen tf2_sensor_msgs tf2_geometry_msgs OpenCV PCL GTSAM Eigen)
+ament_target_dependencies(${PROJECT_NAME}_imuPreintegration ${DEPENDENCIES})
 target_link_libraries(${PROJECT_NAME}_imuPreintegration gtsam "${cpp_typesupport_target}")
 
 add_executable(${PROJECT_NAME}_mapOptimization src/mapOptmization.cpp)
-ament_target_dependencies(${PROJECT_NAME}_mapOptimization rclcpp rclpy std_msgs sensor_msgs geometry_msgs nav_msgs pcl_msgs visualization_msgs tf2 tf2_ros tf2_eigen tf2_sensor_msgs tf2_geometry_msgs OpenCV PCL GTSAM)
+ament_target_dependencies(${PROJECT_NAME}_mapOptimization rclcpp rclpy ${DEPENDENCIES})
 rosidl_target_interfaces(${PROJECT_NAME}_mapOptimization ${PROJECT_NAME} "rosidl_typesupport_cpp")
 if (OpenMP_CXX_FOUND)
   target_link_libraries(${PROJECT_NAME}_mapOptimization gtsam "${cpp_typesupport_target}" OpenMP::OpenMP_CXX)
